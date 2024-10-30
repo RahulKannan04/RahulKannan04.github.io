@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cleaning Tracker</title>
+  <title>Room Cleaning Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,12 +12,12 @@
       align-items: center;
       margin-top: 20px;
     }
-    .task {
+    .room {
       display: flex;
       align-items: center;
       margin: 10px;
     }
-    .task span {
+    .room span {
       font-size: 1.2em;
       margin-right: 10px;
     }
@@ -48,78 +48,62 @@
 </head>
 <body>
 
-  <h2>Cleaning Tracker</h2>
+  <h2>Room Cleaning Tracker</h2>
 
-  <div class="task">
-    <span>Floor</span>
-    <button onclick="recordClick('floor')">Cleaned</button>
+  <div class="room">
+    <span>Kitchen</span>
+    <button onclick="recordClick('kitchen')">Cleaned</button>
   </div>
 
-  <div class="task">
-    <span>Surfaces</span>
-    <button onclick="recordClick('surfaces')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Dishes</span>
-    <button onclick="recordClick('dishes')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Trash</span>
-    <button onclick="recordClick('trash')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Free Day</span>
-    <button onclick="recordClick('freeDay')">Selected</button>
+  <div class="room">
+    <span>Living Room</span>
+    <button onclick="recordClick('livingRoom')">Cleaned</button>
   </div>
 
   <div class="history" id="history"></div>
 
   <script>
-    // Google Apps Script Web App URL
-    const apiUrl = 'https://script.google.com/macros/s/AKfycbyklBkT8zRy2btJNl9FINf6-L19SjJW8M8VuFoSkMsjqtnL640QMq5witEDU1V6pR6I9Q/exec';
-
     // Get the user code from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const userCode = urlParams.get('code');
 
     // Function to record a cleaning action
-    function recordClick(task) {
+    function recordClick(room) {
       const timestamp = new Date().toLocaleString();
+      const recordKey = `${userCode}_${room}_history`;
 
-      // Send data to Google Apps Script
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: userCode,
-          task: task,
-          timestamp: timestamp
-        })
-      })
-      .then(response => response.text())
-      .then(data => {
-        alert(data); // Display response message
-        updateHistory(task, timestamp); // Update local display of history
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to record data');
+      // Get existing history or start with an empty array
+      let history = JSON.parse(localStorage.getItem(recordKey) || '[]');
+      history.push({ room, timestamp });
+      localStorage.setItem(recordKey, JSON.stringify(history));
+
+      // Update display
+      displayHistory(history, room);
+    }
+
+    // Function to display cleaning history
+    function displayHistory(history, room) {
+      const historyDiv = document.getElementById('history');
+      historyDiv.innerHTML = ''; // Clear existing history
+
+      history.forEach(item => {
+        if (item.room === room) {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          historyItem.textContent = `${item.room} cleaned at ${item.timestamp}`;
+          historyDiv.appendChild(historyItem);
+        }
       });
     }
 
-    // Function to update the display of cleaning history
-    function updateHistory(task, timestamp) {
-      const historyDiv = document.getElementById('history');
-      const historyItem = document.createElement('div');
-      historyItem.className = 'history-item';
-      historyItem.textContent = `${task} marked at ${timestamp}`;
-      historyDiv.appendChild(historyItem);
-    }
+    // Load history on page load for both rooms
+    window.onload = function() {
+      const kitchenHistory = JSON.parse(localStorage.getItem(`${userCode}_kitchen_history`) || '[]');
+      const livingRoomHistory = JSON.parse(localStorage.getItem(`${userCode}_livingRoom_history`) || '[]');
+
+      displayHistory(kitchenHistory, 'kitchen');
+      displayHistory(livingRoomHistory, 'livingRoom');
+    };
   </script>
 
 </body>
