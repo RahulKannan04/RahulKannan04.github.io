@@ -36,14 +36,15 @@
     function downloadCSV() {
       const allData = [];
       const codes = ['1083', '1084', '1085', '1086', '1087', '1088', '1089', '1090', '1091', '1092', '1093', '1094', '1095'];
+      const tasks = ['floor', 'surfaces', 'dishes', 'trash', 'freeDay'];
 
       codes.forEach(code => {
-        ['kitchen', 'livingRoom'].forEach(room => {
-          const roomData = JSON.parse(localStorage.getItem(`${code}_${room}_history`) || '[]');
-          roomData.forEach(entry => {
+        tasks.forEach(task => {
+          const taskData = JSON.parse(localStorage.getItem(`${code}_${task}_history`) || '[]');
+          taskData.forEach(entry => {
             allData.push({
               code,
-              room: entry.room,
+              task: entry.task,
               timestamp: entry.timestamp
             });
           });
@@ -52,10 +53,10 @@
 
       // Convert data to CSV format
       let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Code,Room,Timestamp\n"; // Header
+      csvContent += "Code,Task,Timestamp\n"; // Header
 
       allData.forEach(row => {
-        csvContent += `${row.code},${row.room},${row.timestamp}\n`;
+        csvContent += `${row.code},${row.task},${row.timestamp}\n`;
       });
 
       // Create and download CSV file
