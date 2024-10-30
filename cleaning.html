@@ -78,6 +78,9 @@
   <div class="history" id="history"></div>
 
   <script>
+    // Set the Google Apps Script URL
+    const apiUrl = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL';
+
     // Get the user code from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const userCode = urlParams.get('code');
@@ -85,39 +88,38 @@
     // Function to record a cleaning action
     function recordClick(task) {
       const timestamp = new Date().toLocaleString();
-      const recordKey = `${userCode}_${task}_history`;
 
-      // Get existing history or start with an empty array
-      let history = JSON.parse(localStorage.getItem(recordKey) || '[]');
-      history.push({ task, timestamp });
-      localStorage.setItem(recordKey, JSON.stringify(history));
-
-      // Update display
-      displayHistory(history, task);
+      // Send data to Google Apps Script
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: userCode,
+          task: task,
+          timestamp: timestamp
+        })
+      })
+      .then(response => response.text())
+      .then(data => {
+        alert(data); // Display response message
+        updateHistory(task, timestamp); // Update local display of history
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to record data');
+      });
     }
 
-    // Function to display cleaning history
-    function displayHistory(history, task) {
+    // Function to update the display of cleaning history
+    function updateHistory(task, timestamp) {
       const historyDiv = document.getElementById('history');
-      historyDiv.innerHTML = ''; // Clear existing history
-
-      history.forEach(item => {
-        if (item.task === task) {
-          const historyItem = document.createElement('div');
-          historyItem.className = 'history-item';
-          historyItem.textContent = `${item.task} marked at ${item.timestamp}`;
-          historyDiv.appendChild(historyItem);
-        }
-      });
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+      historyItem.textContent = `${task} marked at ${timestamp}`;
+      historyDiv.appendChild(historyItem);
     }
-
-    // Load history on page load for each task
-    window.onload = function() {
-      ['floor', 'surfaces', 'dishes', 'trash', 'freeDay'].forEach(task => {
-        const taskHistory = JSON.parse(localStorage.getItem(`${userCode}_${task}_history`) || '[]');
-        displayHistory(taskHistory, task);
-      });
-    };
   </script>
 
 </body>
