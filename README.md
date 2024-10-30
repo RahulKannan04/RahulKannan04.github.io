@@ -36,22 +36,20 @@
   <button onclick="checkCode()">Submit</button>
 
   <script>
-    // List of valid access codes
     const validCodes = [
       '1083', '1084', '1085', '1086', '1087', '1088', '1089', '1090', '1091', '1092', '1093', '1094', '1095'
     ];
 
-    // Function to check the entered code
     function checkCode() {
       const code = document.getElementById('accessCode').value;
       if (validCodes.includes(code)) {
-        // Redirect to the user's personalized page
         window.location.href = `cleaning.html?code=${code}`;
+      } else if (code === '2024bizlab') {
+        window.location.href = `admin.html`;
       } else {
         alert('Invalid access code. Please try again.');
       }
     }
   </script>
-
 </body>
 </html>
