@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Download Cleaning Data</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Admin Panel: Download Cleaning Data</h2>
+  <button onclick="downloadCSV()">Download CSV</button>
+
+  <script>
+    function downloadCSV() {
+      const allData = [];
+      const codes = ['1083', '1084', '1085', '1086', '1087', '1088', '1089', '1090', '1091', '1092', '1093', '1094', '1095'];
+
+      codes.forEach(code => {
+        ['kitchen', 'livingRoom'].forEach(room => {
+          const roomData = JSON.parse(localStorage.getItem(`${code}_${room}_history`) || '[]');
+          roomData.forEach(entry => {
+            allData.push({
+              code,
+              room: entry.room,
+              timestamp: entry.timestamp
+            });
+          });
+        });
+      });
+
+      // Convert data to CSV format
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Code,Room,Timestamp\n"; // Header
+
+      allData.forEach(row => {
+        csvContent += `${row.code},${row.room},${row.timestamp}\n`;
+      });
+
+      // Create and download CSV file
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "cleaning_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
