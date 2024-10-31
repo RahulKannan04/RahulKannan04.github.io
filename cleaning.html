@@ -83,18 +83,33 @@
     const userCode = urlParams.get('code');
 
     // Function to record a cleaning action
-    function recordClick(task) {
-      const timestamp = new Date().toLocaleString();
-      const recordKey = `${userCode}_${task}_history`;
+    const apiUrl = 'https://script.google.com/macros/s/AKfycbx7mmkFDLB9HMBWh_HvvV4KfYKkIVmR4h9TIaWyNv9P-zUQsG2OqWN144t8jsiYKHlh/exec'; // Replace with your Web App URL
 
-      // Get existing history or start with an empty array
-      let history = JSON.parse(localStorage.getItem(recordKey) || '[]');
-      history.push({ task, timestamp });
-      localStorage.setItem(recordKey, JSON.stringify(history));
+function recordClick(task) {
+  const timestamp = new Date().toLocaleString();
+  const newRecord = {
+    code: userCode, // User code from URL parameter
+    task: task,
+    timestamp: timestamp
+  };
 
-      // Update display
-      displayHistory(history, task);
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(newRecord)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      alert('Data recorded successfully');
+    } else {
+      alert('Failed to record data');
     }
+  })
+  .catch(error => console.error('Error:', error));
+}
 
     // Function to display cleaning history
     function displayHistory(history, task) {
