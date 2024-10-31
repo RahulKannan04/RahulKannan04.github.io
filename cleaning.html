@@ -1,126 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Cleaning Tracker</title>
   <title>Cleaning Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
+@@ -12,12 +12,12 @@
       align-items: center;
       margin-top: 20px;
     }
+    .room {
     .task {
       display: flex;
       align-items: center;
       margin: 10px;
     }
+    .room span {
     .task span {
       font-size: 1.2em;
       margin-right: 10px;
     }
-    button {
-      padding: 8px 15px;
-      font-size: 1em;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .history {
-      margin-top: 20px;
-      width: 80%;
-      max-width: 500px;
-    }
-    .history-item {
-      font-size: 0.9em;
-      color: #555;
-      padding: 5px;
-      border-bottom: 1px solid #ddd;
-    }
-  </style>
+@@ -48,16 +48,31 @@
 </head>
 <body>
 
+  <h2>Room Cleaning Tracker</h2>
   <h2>Cleaning Tracker</h2>
 
+  <div class="room">
+    <span>Kitchen</span>
+    <button onclick="recordClick('kitchen')">Cleaned</button>
   <div class="task">
     <span>Floor</span>
     <button onclick="recordClick('floor')">Cleaned</button>
   </div>
 
+  <div class="room">
+    <span>Living Room</span>
+    <button onclick="recordClick('livingRoom')">Cleaned</button>
   <div class="task">
     <span>Surfaces</span>
     <button onclick="recordClick('surfaces')">Cleaned</button>
   </div>
-
   <div class="task">
     <span>Dishes</span>
     <button onclick="recordClick('dishes')">Cleaned</button>
   </div>
-
   <div class="task">
     <span>Trash</span>
     <button onclick="recordClick('trash')">Cleaned</button>
   </div>
-
   <div class="task">
     <span>Free Day</span>
     <button onclick="recordClick('freeDay')">Selected</button>
   </div>
 
   <div class="history" id="history"></div>
-
-  <script>
-    // Set the Google Apps Script URL
-    const apiUrl = 'https://script.google.com/macros/s/AKfycbwzIxAUUkJ43obKI8krGLuKDCuxcNCcjDSv1F48j_unBqfqD5DnwLkqXoQyYMyBsVvR/exec';
-
-    // Get the user code from the URL
-    const urlParams = new URLSearchParams(window.location.search);
+@@ -68,41 +83,40 @@ <h2>Room Cleaning Tracker</h2>
     const userCode = urlParams.get('code');
 
     // Function to record a cleaning action
+    function recordClick(room) {
     function recordClick(task) {
       const timestamp = new Date().toLocaleString();
+      const recordKey = `${userCode}_${room}_history`;
+      const recordKey = `${userCode}_${task}_history`;
 
-      // Send data to Google Apps Script
-      fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: userCode,
-          task: task,
-          timestamp: timestamp
-        })
-      })
-      .then(response => response.text())
-      .then(data => {
-        alert(data); // Display response message
-        updateHistory(task, timestamp); // Update local display of history
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to record data');
+      // Get existing history or start with an empty array
+      let history = JSON.parse(localStorage.getItem(recordKey) || '[]');
+      history.push({ room, timestamp });
+      history.push({ task, timestamp });
+      localStorage.setItem(recordKey, JSON.stringify(history));
+
+      // Update display
+      displayHistory(history, room);
+      displayHistory(history, task);
+    }
+
+    // Function to display cleaning history
+    function displayHistory(history, room) {
+    function displayHistory(history, task) {
+      const historyDiv = document.getElementById('history');
+      historyDiv.innerHTML = ''; // Clear existing history
+
+      history.forEach(item => {
+        if (item.room === room) {
+        if (item.task === task) {
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          historyItem.textContent = `${item.room} cleaned at ${item.timestamp}`;
+          historyItem.textContent = `${item.task} marked at ${item.timestamp}`;
+          historyDiv.appendChild(historyItem);
+        }
       });
     }
 
-    // Function to update the display of cleaning history
-    function updateHistory(task, timestamp) {
-      const historyDiv = document.getElementById('history');
-      const historyItem = document.createElement('div');
-      historyItem.className = 'history-item';
-      historyItem.textContent = `${task} marked at ${timestamp}`;
-      historyDiv.appendChild(historyItem);
-    }
+    // Load history on page load for both rooms
+    // Load history on page load for each task
+    window.onload = function() {
+      const kitchenHistory = JSON.parse(localStorage.getItem(`${userCode}_kitchen_history`) || '[]');
+      const livingRoomHistory = JSON.parse(localStorage.getItem(`${userCode}_livingRoom_history`) || '[]');
+      displayHistory(kitchenHistory, 'kitchen');
+      displayHistory(livingRoomHistory, 'livingRoom');
+      ['floor', 'surfaces', 'dishes', 'trash', 'freeDay'].forEach(task => {
+        const taskHistory = JSON.parse(localStorage.getItem(`${userCode}_${task}_history`) || '[]');
+        displayHistory(taskHistory, task);
+      });
+    };
   </script>
-
-</body>
-</html>
