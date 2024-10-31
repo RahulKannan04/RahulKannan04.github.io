@@ -4,120 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cleaning Tracker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 20px;
-    }
-    .task {
-      display: flex;
-      align-items: center;
-      margin: 10px;
-    }
-    .task span {
-      font-size: 1.2em;
-      margin-right: 10px;
-    }
-    button {
-      padding: 8px 15px;
-      font-size: 1em;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .history {
-      margin-top: 20px;
-      width: 80%;
-      max-width: 500px;
-    }
-    .history-item {
-      font-size: 0.9em;
-      color: #555;
-      padding: 5px;
-      border-bottom: 1px solid #ddd;
-    }
-  </style>
 </head>
 <body>
 
   <h2>Cleaning Tracker</h2>
-
-  <div class="task">
-    <span>Floor</span>
-    <button onclick="recordClick('floor')">Cleaned</button>
+  
+  <!-- Tasks -->
+  <div id="tasks">
+    <button onclick="recordClick('floor')">Floor Cleaned</button>
+    <button onclick="recordClick('surfaces')">Surfaces Cleaned</button>
+    <button onclick="recordClick('dishes')">Dishes Cleaned</button>
+    <button onclick="recordClick('trash')">Trash Taken Out</button>
+    <button onclick="recordClick('freeDay')">Free Day Selected</button>
   </div>
-
-  <div class="task">
-    <span>Surfaces</span>
-    <button onclick="recordClick('surfaces')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Dishes</span>
-    <button onclick="recordClick('dishes')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Trash</span>
-    <button onclick="recordClick('trash')">Cleaned</button>
-  </div>
-
-  <div class="task">
-    <span>Free Day</span>
-    <button onclick="recordClick('freeDay')">Selected</button>
-  </div>
-
-  <div class="history" id="history"></div>
 
   <script>
-    // Get the user code from the URL
+    const apiUrl = 'https://api.github.com/repos/RahulKannan04/Cleaning Data/contents/data.json';
+    const githubToken = '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';
+
+    // Get user code from URL query (e.g., ?code=1234)
     const urlParams = new URLSearchParams(window.location.search);
     const userCode = urlParams.get('code');
 
     // Function to record a cleaning action
     function recordClick(task) {
       const timestamp = new Date().toLocaleString();
-      const recordKey = `${userCode}_${task}_history`;
+      const newRecord = { code: userCode, task: task, timestamp: timestamp };
 
-      // Get existing history or start with an empty array
-      let history = JSON.parse(localStorage.getItem(recordKey) || '[]');
-      history.push({ task, timestamp });
-      localStorage.setItem(recordKey, JSON.stringify(history));
-
-      // Update display
-      displayHistory(history, task);
-    }
-
-    // Function to display cleaning history
-    function displayHistory(history, task) {
-      const historyDiv = document.getElementById('history');
-      historyDiv.innerHTML = ''; // Clear existing history
-
-      history.forEach(item => {
-        if (item.task === task) {
-          const historyItem = document.createElement('div');
-          historyItem.className = 'history-item';
-          historyItem.textContent = `${item.task} marked at ${item.timestamp}`;
-          historyDiv.appendChild(historyItem);
+      // Fetch the current content of the file from GitHub
+      fetch(apiUrl, {
+        headers: {
+          Authorization: `token ${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}`,
+          Accept: 'application/vnd.github.v3+json'
         }
-      });
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Decode the base64 content of the file
+        const fileContent = JSON.parse(atob(data.content));
+        
+        // Add new record
+        fileContent.records.push(newRecord);
+
+        // Update the file on GitHub with new content
+        updateGitHubFile(fileContent, data.sha);
+      })
+      .catch(error => console.error('Error fetching file:', error));
     }
 
-    // Load history on page load for each task
-    window.onload = function() {
-      ['floor', 'surfaces', 'dishes', 'trash', 'freeDay'].forEach(task => {
-        const taskHistory = JSON.parse(localStorage.getItem(`${userCode}_${task}_history`) || '[]');
-        displayHistory(taskHistory, task);
-      });
-    };
+    // Function to update the file on GitHub
+    function updateGitHubFile(content, sha) {
+      fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${githubToken}`,
+          Accept: 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          message: 'Updated data.json with new record',
+          content: btoa(JSON.stringify(content, null, 2)), // Convert to base64
+          sha: sha // Include the SHA of the existing file
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert('Data recorded successfully');
+        console.log('File updated:', data);
+      })
+      .catch(error => console.error('Error updating file:', error));
+    }
   </script>
 
 </body>
