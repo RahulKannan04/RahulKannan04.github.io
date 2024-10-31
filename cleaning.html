@@ -19,8 +19,8 @@
   </div>
 
   <script>
-    const apiUrl = 'https://api.github.com/repos/RahulKannan04/Cleaning Data/contents/data.json';
-    const githubToken = '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';
+    const apiUrl = 'https://api.github.com/repos/RahulKannan04/Cleaning-Data/contents/data.json';
+    const githubToken = 'your_new_token_here';
 
     // Get user code from URL query (e.g., ?code=1234)
     const urlParams = new URLSearchParams(window.location.search);
@@ -34,7 +34,7 @@
       // Fetch the current content of the file from GitHub
       fetch(apiUrl, {
         headers: {
-          Authorization: `token ${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}`,
+          Authorization: `token ${githubToken}`,
           Accept: 'application/vnd.github.v3+json'
         }
       })
@@ -57,12 +57,12 @@
       fetch(apiUrl, {
         method: 'PUT',
         headers: {
-          Authorization: `token ${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}`,
+          Authorization: `token ${githubToken}`,
           Accept: 'application/vnd.github.v3+json'
         },
         body: JSON.stringify({
           message: 'Updated data.json with new record',
-          content: btoa(JSON.stringify(content, null, 2)), // Convert to base64
+          content: btoa(JSON.stringify(content)), // Convert to base64
           sha: sha // Include the SHA of the existing file
         })
       })
